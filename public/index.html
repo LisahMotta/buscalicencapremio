@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Busca Licença Prêmio – Diário Oficial SP</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-area">
+        <svg class="icon-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <div>
+          <h1>Busca Licença Prêmio</h1>
+          <p class="subtitle">Diário Oficial do Estado de São Paulo</p>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="card form-card">
+        <h2>Pesquisar Certidão</h2>
+        <p class="form-desc">
+          Busca simultânea em
+          <a href="https://www.imprensaoficial.com.br" target="_blank" rel="noopener">Imprensa Oficial</a>
+          e
+          <a href="https://www.doe.sp.gov.br" target="_blank" rel="noopener">DOE SP</a>
+        </p>
+
+        <form id="formBusca" autocomplete="off">
+          <div class="field-group">
+            <label for="nome">Nome completo <span class="required">*</span></label>
+            <input
+              type="text"
+              id="nome"
+              name="nome"
+              placeholder="Ex.: João da Silva Souza"
+              required
+              minlength="3"
+              autofocus
+            />
+          </div>
+
+          <div class="field-group">
+            <label for="rg">RG <span class="optional">(opcional)</span></label>
+            <input
+              type="text"
+              id="rg"
+              name="rg"
+              placeholder="Ex.: 12.345.678-9"
+              maxlength="20"
+            />
+          </div>
+
+          <button type="submit" id="btnBuscar" class="btn-primary">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/>
+              <path d="m21 21-4.35-4.35"/>
+            </svg>
+            Buscar
+          </button>
+        </form>
+      </section>
+
+      <section id="loading" class="loading hidden">
+        <div class="spinner"></div>
+        <p>Consultando Imprensa Oficial e DOE SP…</p>
+      </section>
+
+      <section id="erro-global" class="card error-card hidden">
+        <p id="erro-msg"></p>
+      </section>
+
+      <section id="resultados" class="hidden">
+        <div class="results-header">
+          <h2>Resultados</h2>
+          <div class="results-meta">
+            <span id="total-badge" class="badge"></span>
+            <button id="btnLimpar" class="btn-secondary">Limpar</button>
+          </div>
+        </div>
+        <div id="lista-resultados"></div>
+
+        <div class="links-diretos card">
+          <h3>Acessar diretamente</h3>
+          <p>Se não encontrar o resultado, use os links abaixo para busca manual:</p>
+          <div class="links-grid" id="links-diretos-grid"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>
+        Dados consultados em tempo real via
+        <a href="https://www.imprensaoficial.com.br" target="_blank" rel="noopener">imprensaoficial.com.br</a>
+        e
+        <a href="https://www.doe.sp.gov.br" target="_blank" rel="noopener">doe.sp.gov.br</a>
+      </p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
