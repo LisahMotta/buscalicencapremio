@@ -25,7 +25,7 @@
       <section class="card form-card">
         <h2>Pesquisar Certidão</h2>
         <p class="form-desc">
-          Busca simultânea em
+          Gera links de busca para
           <a href="https://www.imprensaoficial.com.br" target="_blank" rel="noopener">Imprensa Oficial</a>
           e
           <a href="https://www.doe.sp.gov.br" target="_blank" rel="noopener">DOE SP</a>
@@ -61,14 +61,9 @@
               <circle cx="11" cy="11" r="8"/>
               <path d="m21 21-4.35-4.35"/>
             </svg>
-            Buscar
+            Gerar links de busca
           </button>
         </form>
-      </section>
-
-      <section id="loading" class="loading hidden">
-        <div class="spinner"></div>
-        <p>Consultando Imprensa Oficial e DOE SP…</p>
       </section>
 
       <section id="erro-global" class="card error-card hidden">
@@ -77,25 +72,17 @@
 
       <section id="resultados" class="hidden">
         <div class="results-header">
-          <h2>Resultados</h2>
-          <div class="results-meta">
-            <span id="total-badge" class="badge"></span>
-            <button id="btnLimpar" class="btn-secondary">Limpar</button>
-          </div>
+          <h2>Links de busca gerados</h2>
+          <button id="btnLimpar" class="btn-secondary">Limpar</button>
         </div>
-        <div id="lista-resultados"></div>
-
-        <div class="links-diretos card">
-          <h3>Acessar diretamente</h3>
-          <p>Se não encontrar o resultado, use os links abaixo para busca manual:</p>
-          <div class="links-grid" id="links-diretos-grid"></div>
-        </div>
+        <p class="results-desc">Clique nos links abaixo para abrir a busca diretamente nos sites oficiais.</p>
+        <div id="lista-links"></div>
       </section>
     </main>
 
     <footer>
       <p>
-        Dados consultados em tempo real via
+        Busca realizada diretamente em
         <a href="https://www.imprensaoficial.com.br" target="_blank" rel="noopener">imprensaoficial.com.br</a>
         e
         <a href="https://www.doe.sp.gov.br" target="_blank" rel="noopener">doe.sp.gov.br</a>
