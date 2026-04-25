@@ -5,12 +5,10 @@ const HTTP_TIMEOUT = 15000;
 const HEADERS = {
   'User-Agent':
     'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  Accept:
-    'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
   'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
 };
 
-/* ---------- Imprensa Oficial ---------- */
 async function buscaImprensaOficial(nome, rg) {
   const resultados = [];
   const termoBusca = rg ? `"${nome}" ${rg}` : `"${nome}"`;
@@ -30,24 +28,17 @@ async function buscaImprensaOficial(nome, rg) {
 
     const $ = cheerio.load(response.data);
 
-    $(
-      '.resultado-item, .search-result, tr.resultItem, .item-resultado'
-    ).each((i, el) => {
+    $('.resultado-item, .search-result, tr.resultItem, .item-resultado').each((i, el) => {
       const texto = $(el).text().trim();
       const link = $(el).find('a').attr('href') || '';
-      const data = $(el)
-        .find('.data, .date, td:first-child')
-        .text()
-        .trim();
+      const data = $(el).find('.data, .date, td:first-child').text().trim();
 
       if (texto) {
         resultados.push({
           fonte: 'Imprensa Oficial',
           data: data || '',
           trecho: texto.substring(0, 500),
-          link: link.startsWith('http')
-            ? link
-            : `https://www.imprensaoficial.com.br${link}`,
+          link: link.startsWith('http') ? link : `https://www.imprensaoficial.com.br${link}`,
         });
       }
     });
@@ -78,7 +69,6 @@ async function buscaImprensaOficial(nome, rg) {
   return resultados;
 }
 
-/* ---------- DOE SP ---------- */
 async function buscaDOE(nome, rg) {
   const resultados = [];
   const termoBusca = rg ? `"${nome}" ${rg}` : `"${nome}"`;
@@ -93,14 +83,9 @@ async function buscaDOE(nome, rg) {
 
     const $ = cheerio.load(response.data);
 
-    $(
-      '.search-result-item, .resultado, article, .doe-item, .materia'
-    ).each((i, el) => {
+    $('.search-result-item, .resultado, article, .doe-item, .materia').each((i, el) => {
       const titulo = $(el).find('h2, h3, .titulo, .title').text().trim();
-      const trecho = $(el)
-        .find('p, .resumo, .excerpt, .snippet')
-        .text()
-        .trim();
+      const trecho = $(el).find('p, .resumo, .excerpt, .snippet').text().trim();
       const data = $(el).find('.data, .date, time').text().trim();
       const link = $(el).find('a').attr('href') || '';
 
@@ -108,11 +93,8 @@ async function buscaDOE(nome, rg) {
         resultados.push({
           fonte: 'DOE SP',
           data: data || '',
-          trecho:
-            (titulo ? `${titulo} — ` : '') + trecho.substring(0, 500),
-          link: link.startsWith('http')
-            ? link
-            : `https://www.doe.sp.gov.br${link}`,
+          trecho: (titulo ? `${titulo} — ` : '') + trecho.substring(0, 500),
+          link: link.startsWith('http') ? link : `https://www.doe.sp.gov.br${link}`,
         });
       }
     });
@@ -121,8 +103,7 @@ async function buscaDOE(nome, rg) {
       resultados.push({
         fonte: 'DOE SP',
         data: '',
-        trecho:
-          'Nenhum resultado estruturado encontrado. Verifique diretamente no site.',
+        trecho: 'Nenhum resultado estruturado encontrado. Verifique diretamente no site.',
         link: `https://www.doe.sp.gov.br/search?q=${encodeURIComponent(termoBusca)}`,
         aviso: true,
       });
@@ -140,23 +121,18 @@ async function buscaDOE(nome, rg) {
   return resultados;
 }
 
-/* ---------- Handler ---------- */
 module.exports = async function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST')
-    return res.status(405).json({ erro: 'Método não permitido.' });
+  if (req.method !== 'POST') return res.status(405).json({ erro: 'Método não permitido.' });
 
   const { nome, rg } = req.body || {};
 
   if (!nome || nome.trim().length < 3) {
-    return res
-      .status(400)
-      .json({ erro: 'Informe o nome completo (mínimo 3 caracteres).' });
+    return res.status(400).json({ erro: 'Informe o nome completo (mínimo 3 caracteres).' });
   }
 
   const nomeLimpo = nome.trim();
@@ -175,11 +151,9 @@ module.exports = async function handler(req, res) {
 
     return res.json({
       resultados,
-      total: resultados.filter((r) => !r.aviso && !r.erro).length,
+      total: resultados.filter(r => !r.aviso && !r.erro).length,
     });
   } catch (err) {
-    return res
-      .status(500)
-      .json({ erro: 'Erro interno ao processar a busca.' });
+    return res.status(500).json({ erro: 'Erro interno ao processar a busca.' });
   }
 };
