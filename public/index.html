@@ -13,101 +13,126 @@
   <div class="container">
 
     <header>
-      <h1>Busca no DOE</h1>
-      <p class="subtitle">Diário Oficial do Estado de São Paulo · Caderno Executivo I e II</p>
+      <div class="header-top">
+        <div>
+          <h1>Busca no DOE</h1>
+          <p class="subtitle">Diário Oficial SP · Caderno Executivo I e II</p>
+        </div>
+      </div>
+      <nav class="tab-nav" role="tablist">
+        <button id="tab-btn-busca" class="tab-btn tab-ativo" role="tab">&#128269; Busca</button>
+        <button id="tab-btn-historico" class="tab-btn" role="tab">&#128203; Histórico</button>
+      </nav>
     </header>
+
+    <div id="aviso-db" class="aviso-db hidden">
+      ⚠️ Banco de dados não configurado. Os dados são salvos apenas neste navegador.
+      <a href="https://vercel.com/docs/storage/vercel-kv" target="_blank" rel="noopener">Saiba como configurar o Vercel KV ↗</a>
+    </div>
 
     <main>
 
-      <!-- PASSO 1: Upload -->
-      <section id="sec-upload" class="card">
-        <h2>Carregar lista de pessoas</h2>
-        <p class="form-desc">
-          Envie um arquivo <strong>CSV</strong> (Nome,Documento por linha) ou <strong>PDF</strong> com a lista de servidores.
-          A lista fica salva no navegador para buscas diárias sem precisar re-enviar.
-        </p>
+      <!-- ===== VIEW: BUSCA ===== -->
+      <div id="view-busca">
 
-        <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Clique ou arraste um arquivo CSV ou PDF">
-          <div class="drop-icon">📄</div>
-          <p class="drop-text">Arraste aqui ou <span class="drop-link">clique para selecionar</span></p>
-          <p class="drop-hint">CSV ou PDF · máx. 10 MB</p>
-          <input type="file" id="file-input" accept=".csv,.pdf,text/csv,application/pdf" hidden />
-        </div>
-
-        <div class="or-sep"><span>ou cole o conteúdo abaixo</span></div>
-
-        <div class="manual-area">
-          <label for="csv-manual">Lista em texto — formato: Nome,Documento (uma pessoa por linha)</label>
-          <textarea id="csv-manual" rows="6"
-            placeholder="Nome,Documento&#10;João da Silva Souza,123.456.789-00&#10;Maria Santos,12.345.678-9&#10;Pedro Alves,987.654.321-00"></textarea>
-          <button id="btn-parse-manual" class="btn-secondary" type="button">Carregar lista</button>
-        </div>
-      </section>
-
-      <!-- Erro global -->
-      <section id="erro-global" class="card error-card hidden" aria-live="polite">
-        <p id="erro-msg"></p>
-      </section>
-
-      <!-- PASSO 2: Preview da lista -->
-      <section id="sec-lista" class="hidden">
-        <div class="results-header">
-          <h2>Lista carregada</h2>
-          <div class="header-actions">
-            <span id="lista-count" class="badge-count"></span>
-            <button id="btn-alterar" class="btn-secondary" type="button">Alterar lista</button>
+        <!-- Passo 1: Upload -->
+        <section id="sec-upload" class="card">
+          <h2>Carregar lista de pessoas</h2>
+          <p class="form-desc">
+            Envie um <strong>CSV</strong> (Nome,Documento por linha) ou <strong>PDF</strong>.
+            A lista fica salva no banco de dados para buscas diárias.
+          </p>
+          <div id="drop-zone" class="drop-zone" tabindex="0" role="button">
+            <div class="drop-icon">&#128196;</div>
+            <p class="drop-text">Arraste aqui ou <span class="drop-link">clique para selecionar</span></p>
+            <p class="drop-hint">CSV ou PDF · máx. 10 MB</p>
+            <input type="file" id="file-input" accept=".csv,.pdf,text/csv,application/pdf" hidden />
           </div>
-        </div>
+          <div class="or-sep"><span>ou cole abaixo</span></div>
+          <div class="manual-area">
+            <label for="csv-manual">Lista em texto (Nome,Documento — uma por linha)</label>
+            <textarea id="csv-manual" rows="6"
+              placeholder="Nome,Documento&#10;João da Silva,123.456.789-00&#10;Maria Santos,12.345.678-9"></textarea>
+            <button id="btn-parse-manual" class="btn-secondary" type="button">Carregar lista</button>
+          </div>
+        </section>
 
-        <div class="tabela-wrap">
-          <table id="tabela-lista">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Nome</th>
-                <th>Documento</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="tabela-corpo"></tbody>
-          </table>
-        </div>
+        <!-- Erro global -->
+        <section id="erro-global" class="card error-card hidden"><p id="erro-msg"></p></section>
 
-        <div class="busca-actions">
-          <span class="data-hoje"><span class="ico-cal">📅</span> <span id="data-hoje-txt"></span></span>
-          <button id="btn-buscar-lote" class="btn-primary" type="button">
-            <span class="btn-label">🔍 Buscar no DOE hoje</span>
-            <span class="btn-loading hidden"><span class="spinner"></span> Buscando…</span>
-          </button>
-        </div>
-      </section>
+        <!-- Passo 2: Preview -->
+        <section id="sec-lista" class="hidden">
+          <div class="results-header">
+            <h2>Lista carregada</h2>
+            <div class="header-actions">
+              <span id="lista-count" class="badge-count"></span>
+              <button id="btn-alterar" class="btn-secondary" type="button">Alterar lista</button>
+            </div>
+          </div>
+          <div class="tabela-wrap">
+            <table><thead><tr><th>#</th><th>Nome</th><th>Documento</th><th></th></tr></thead>
+            <tbody id="tabela-corpo"></tbody></table>
+          </div>
+          <div class="busca-actions">
+            <span class="data-hoje">&#128197; <span id="data-hoje-txt"></span></span>
+            <button id="btn-buscar-lote" class="btn-primary" type="button">
+              <span class="btn-label">&#128269; Buscar no DOE hoje</span>
+              <span class="btn-loading hidden"><span class="spinner"></span> Buscando…</span>
+            </button>
+          </div>
+        </section>
 
-      <!-- Loading -->
-      <section id="loading-section" class="hidden" aria-live="polite">
-        <div class="loading-bar"><div class="loading-bar-inner"></div></div>
-        <p class="loading-text" id="loading-text">Consultando DOE…</p>
-        <p class="loading-sub" id="loading-sub"></p>
-      </section>
+        <!-- Loading -->
+        <section id="loading-section" class="hidden">
+          <div class="loading-bar"><div class="loading-bar-inner"></div></div>
+          <p class="loading-text" id="loading-text">Consultando…</p>
+          <p class="loading-sub" id="loading-sub"></p>
+        </section>
 
-      <!-- PASSO 3: Resultados -->
-      <section id="sec-resultados" class="hidden">
-        <div class="results-header">
-          <h2 id="titulo-resultados">Resultados</h2>
-          <button id="btn-nova-busca" class="btn-secondary" type="button">← Voltar à lista</button>
-        </div>
-        <div id="resumo-resultados" class="resumo-bar hidden"></div>
-        <div id="lista-resultados"></div>
-      </section>
+        <!-- Passo 3: Resultados -->
+        <section id="sec-resultados" class="hidden">
+          <div class="results-header">
+            <h2 id="titulo-resultados">Resultados</h2>
+            <button id="btn-nova-busca" class="btn-secondary" type="button">← Voltar à lista</button>
+          </div>
+          <div id="resumo-resultados" class="resumo-bar hidden"></div>
+          <div id="lista-resultados"></div>
+        </section>
+
+      </div>
+      <!-- /view-busca -->
+
+      <!-- ===== VIEW: HISTÓRICO ===== -->
+      <div id="view-historico" class="hidden">
+
+        <section id="sec-hist-lista">
+          <div class="results-header">
+            <h2>Histórico de buscas</h2>
+          </div>
+          <div id="hist-loading" class="hidden">
+            <div class="loading-bar"><div class="loading-bar-inner"></div></div>
+            <p class="loading-text">Carregando histórico…</p>
+          </div>
+          <div id="hist-datas"></div>
+        </section>
+
+        <section id="sec-hist-detalhe" class="hidden">
+          <div class="results-header">
+            <h2 id="hist-detalhe-titulo">Busca</h2>
+            <button id="btn-voltar-hist" class="btn-secondary" type="button">← Histórico</button>
+          </div>
+          <div id="hist-detalhe-resumo" class="resumo-bar hidden"></div>
+          <div id="hist-detalhe-lista"></div>
+        </section>
+
+      </div>
+      <!-- /view-historico -->
 
     </main>
 
     <footer>
-      <p>
-        Consulta ao
-        <a href="https://www.doe.sp.gov.br" target="_blank" rel="noopener">doe.sp.gov.br</a>
-        e
-        <a href="https://www.imprensaoficial.com.br" target="_blank" rel="noopener">imprensaoficial.com.br</a>
-      </p>
+      <p>Consulta ao <a href="https://www.doe.sp.gov.br" target="_blank" rel="noopener">doe.sp.gov.br</a>
+      e <a href="https://www.imprensaoficial.com.br" target="_blank" rel="noopener">imprensaoficial.com.br</a></p>
     </footer>
   </div>
 
