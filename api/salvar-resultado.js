@@ -1,8 +1,28 @@
-const { kv } = require('@vercel/kv');
+const { put, list, del } = require('@vercel/blob');
 
 function dataBrasil() {
-  // UTC-3 (Brasil)
   return new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString().split('T')[0];
+}
+
+const INDICE_PATH = 'doe-busca/indice.json';
+
+async function lerJSON(path) {
+  try {
+    const { blobs } = await list({ prefix: path, limit: 1 });
+    if (!blobs.length) return null;
+    const resp = await fetch(blobs[0].url + '?t=' + Date.now());
+    return resp.ok ? resp.json() : null;
+  } catch { return null; }
+}
+
+async function gravarJSON(path, dados) {
+  const { blobs } = await list({ prefix: path, limit: 10 });
+  if (blobs.length) await del(blobs.map(b => b.url));
+  await put(path, JSON.stringify(dados), {
+    access: 'public',
+    addRandomSuffix: false,
+    contentType: 'application/json',
+  });
 }
 
 module.exports = async function handler(req, res) {
@@ -13,7 +33,7 @@ module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ erro: 'Método não permitido.' });
 
   const { resultados } = req.body || {};
-  if (!Array.isArray(resultados) || resultados.length === 0)
+  if (!Array.isArray(resultados) || !resultados.length)
     return res.status(400).json({ erro: 'Resultados inválidos.' });
 
   try {
@@ -32,19 +52,25 @@ module.exports = async function handler(req, res) {
       timestamp: new Date().toISOString(),
     };
 
-    await kv.set(`resultado:${dataKey}`, registro);
-    await kv.expire(`resultado:${dataKey}`, 60 * 60 * 24 * 180); // 180 dias
+    // Salva resultado do dia
+    await gravarJSON(`doe-busca/resultado-${dataKey}.json`, registro);
 
-    let datas = (await kv.get('datas-busca')) || [];
-    datas = datas.filter(d => d !== dataKey);
-    datas.unshift(dataKey);
-    if (datas.length > 180) datas = datas.slice(0, 180);
-    await kv.set('datas-busca', datas);
+    // Atualiza índice
+    const indice = (await lerJSON(INDICE_PATH)) || [];
+    const semHoje = indice.filter(item => item.data !== dataKey);
+    semHoje.unshift({
+      data: dataKey,
+      totalPessoas: registro.totalPessoas,
+      encontrados: registro.encontrados,
+      timestamp: registro.timestamp,
+    });
+    const indiceAtualizado = semHoje.slice(0, 180);
+    await gravarJSON(INDICE_PATH, indiceAtualizado);
 
     return res.json({ ok: true, data: dataKey });
   } catch (err) {
-    const semKV = err.message && (err.message.includes('KV_URL') || err.message.includes('KV_REST_API'));
-    if (semKV) return res.status(503).json({ erro: 'BD_NAO_CONFIGURADO' });
-    return res.status(500).json({ erro: 'Erro ao salvar resultados.' });
+    if (err.message && err.message.includes('BLOB_READ_WRITE_TOKEN'))
+      return res.status(503).json({ erro: 'BD_NAO_CONFIGURADO' });
+    return res.status(500).json({ erro: 'Erro ao salvar: ' + err.message });
   }
 };
