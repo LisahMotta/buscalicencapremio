@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Busca Licença Prêmio – Diário Oficial SP</title>
+  <title>Busca DOE – Caderno Executivo I e II</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -13,75 +13,136 @@
   <div class="container">
 
     <header>
-      <h1>Busca Licença Prêmio</h1>
-      <p class="subtitle">Diário Oficial do Estado de São Paulo</p>
+      <div class="header-top">
+        <div>
+          <h1>Busca DOE</h1>
+          <p class="subtitle">Diário Oficial do Estado de São Paulo &middot; Caderno Executivo I e II</p>
+        </div>
+      </div>
+      <nav class="tab-nav" role="tablist">
+        <button id="tab-btn-busca"     class="tab-btn tab-ativo" role="tab">&#128269; Busca</button>
+        <button id="tab-btn-historico" class="tab-btn"           role="tab">&#128203; Histórico</button>
+      </nav>
     </header>
 
-    <main>
-      <section class="card form-card">
-        <h2>Pesquisar publicação</h2>
-        <p class="form-desc">
-          Busca automatizada na
-          <a href="https://www.imprensaoficial.com.br" target="_blank" rel="noopener">Imprensa Oficial</a>
-          e no
-          <a href="https://www.doe.sp.gov.br" target="_blank" rel="noopener">DOE SP</a>.
-          Os resultados aparecem aqui na tela.
-        </p>
+    <div id="aviso-db" class="aviso-db hidden">
+      &#9888;&#65039; Banco de dados não configurado — dados salvos apenas neste navegador.
+      <a href="https://vercel.com/docs/storage/vercel-blob" target="_blank" rel="noopener">Ver como configurar ↗</a>
+    </div>
 
-        <form id="formBusca" autocomplete="off">
-          <div class="field-group">
-            <label for="nome">Nome completo <span class="req">*</span></label>
-            <input type="text" id="nome" name="nome" placeholder="Ex.: João da Silva Souza" required minlength="3" autofocus />
+    <main>
+
+      <!-- ===== VIEW: BUSCA ===== -->
+      <div id="view-busca">
+
+        <!-- Passo 1: Upload -->
+        <section id="sec-upload" class="card">
+          <h2>Busca DOE</h2>
+          <p class="form-desc">
+            Suba uma lista com <strong>nomes e RGs</strong> dos servidores.
+            A busca nos Cadernos Executivos I e II começa automaticamente.
+          </p>
+
+          <!-- Botão principal de upload -->
+          <div id="drop-zone" class="drop-zone" tabindex="0" role="button" aria-label="Clique para selecionar arquivo CSV ou PDF">
+            <div class="upload-area-inner">
+              <span class="upload-icon">&#128196;</span>
+              <div>
+                <p class="upload-cta">Subir lista de nomes e RGs</p>
+                <p class="upload-sub">CSV ou PDF &middot; arraste ou clique aqui</p>
+              </div>
+            </div>
+            <input type="file" id="file-input" accept=".csv,.pdf,text/csv,application/pdf" hidden />
           </div>
-          <div class="field-group">
-            <label for="rg">RG <span class="opt">(opcional)</span></label>
-            <input type="text" id="rg" name="rg" placeholder="Ex.: 12.345.678-9" maxlength="20" />
+
+          <div class="or-sep"><span>ou cole manualmente</span></div>
+
+          <div class="manual-area">
+            <label for="csv-manual">Lista em texto &mdash; formato: Nome,RG (uma por linha)</label>
+            <textarea id="csv-manual" rows="5"
+              placeholder="Nome,RG&#10;João da Silva Souza,12.345.678-9&#10;Maria Santos,98.765.432-1&#10;Pedro Alves,55.667.788-0"></textarea>
+            <button id="btn-parse-manual" class="btn-primary" type="button">
+              &#128269; Buscar no DOE
+            </button>
           </div>
-          <div class="form-actions">
-            <button type="submit" id="btnBuscar" class="btn-primary">
-              <span class="btn-label">Buscar no Diário Oficial</span>
+        </section>
+
+        <!-- Erro global -->
+        <section id="erro-global" class="card error-card hidden"><p id="erro-msg"></p></section>
+
+        <!-- Passo 2: Preview da lista (lista salva, sem busca nova) -->
+        <section id="sec-lista" class="hidden">
+          <div class="results-header">
+            <h2>Lista de servidores</h2>
+            <div class="header-actions">
+              <span id="lista-count" class="badge-count"></span>
+              <button id="btn-alterar" class="btn-secondary" type="button">&#128196; Nova lista</button>
+            </div>
+          </div>
+          <div class="tabela-wrap">
+            <table><thead><tr><th>#</th><th>Nome</th><th>RG / Documento</th><th></th></tr></thead>
+            <tbody id="tabela-corpo"></tbody></table>
+          </div>
+          <div class="busca-actions">
+            <span class="data-hoje">&#128197; <span id="data-hoje-txt"></span></span>
+            <button id="btn-buscar-lote" class="btn-primary" type="button">
+              <span class="btn-label">&#128269; Buscar no DOE hoje</span>
               <span class="btn-loading hidden"><span class="spinner"></span> Buscando…</span>
             </button>
           </div>
-        </form>
-      </section>
+        </section>
 
-      <section id="erro-global" class="card error-card hidden">
-        <p id="erro-msg"></p>
-      </section>
+        <!-- Loading -->
+        <section id="loading-section" class="hidden">
+          <div class="loading-bar"><div class="loading-bar-inner"></div></div>
+          <p class="loading-text" id="loading-text">Consultando…</p>
+          <p class="loading-sub"  id="loading-sub"></p>
+        </section>
 
-      <section id="loading-section" class="hidden">
-        <div class="loading-bar"><div class="loading-bar-inner"></div></div>
-        <p class="loading-text">Consultando Diário Oficial…</p>
-      </section>
+        <!-- Passo 3: Resultados -->
+        <section id="sec-resultados" class="hidden">
+          <div class="results-header">
+            <h2 id="titulo-resultados">Resultados</h2>
+            <div class="header-actions">
+              <button id="btn-rebuscar"   class="btn-secondary" type="button">&#128260; Buscar de novo</button>
+              <button id="btn-nova-lista" class="btn-secondary" type="button">&#128196; Nova lista</button>
+            </div>
+          </div>
+          <div id="resumo-resultados" class="resumo-bar hidden"></div>
+          <div id="lista-resultados"></div>
+        </section>
 
-      <section id="resultados-api" class="hidden">
-        <div class="results-header">
-          <h2 id="titulo-resultados">Resultados encontrados</h2>
-          <button id="btnLimpar" class="btn-secondary" type="button">Nova busca</button>
-        </div>
-        <div id="lista-resultados"></div>
-      </section>
+      </div><!-- /view-busca -->
 
-      <section id="links-diretos" class="hidden">
-        <div class="results-header">
-          <h2>Buscar manualmente</h2>
-        </div>
-        <p class="results-desc">Use os links abaixo para pesquisar diretamente nos sites oficiais.</p>
-        <div id="lista-links"></div>
-      </section>
+      <!-- ===== VIEW: HISTÓRICO ===== -->
+      <div id="view-historico" class="hidden">
+        <section id="sec-hist-lista">
+          <div class="results-header"><h2>Histórico de buscas</h2></div>
+          <div id="hist-loading" class="hidden">
+            <div class="loading-bar"><div class="loading-bar-inner"></div></div>
+            <p class="loading-text">Carregando histórico…</p>
+          </div>
+          <div id="hist-datas"></div>
+        </section>
+        <section id="sec-hist-detalhe" class="hidden">
+          <div class="results-header">
+            <h2 id="hist-detalhe-titulo">Busca</h2>
+            <button id="btn-voltar-hist" class="btn-secondary">← Histórico</button>
+          </div>
+          <div id="hist-detalhe-resumo" class="resumo-bar hidden"></div>
+          <div id="hist-detalhe-lista"></div>
+        </section>
+      </div><!-- /view-historico -->
+
     </main>
 
     <footer>
-      <p>
-        Dados obtidos de
-        <a href="https://www.imprensaoficial.com.br" target="_blank" rel="noopener">imprensaoficial.com.br</a>
-        e
-        <a href="https://www.doe.sp.gov.br" target="_blank" rel="noopener">doe.sp.gov.br</a>
-      </p>
+      <p>Consulta ao <a href="https://www.doe.sp.gov.br" target="_blank" rel="noopener">doe.sp.gov.br</a>
+      e <a href="https://www.imprensaoficial.com.br" target="_blank" rel="noopener">imprensaoficial.com.br</a></p>
     </footer>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
